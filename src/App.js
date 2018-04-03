@@ -1,93 +1,46 @@
-import React, { Component } from 'react';
-import ReactDOM from 'react-dom';
-import axios from 'axios';
-import {
-    Link
-  } from 'react-router-dom';
-import Products from './Products';
+import React from 'react';
+import { HashRouter as Router, Route, Switch } from 'react-router-dom';
+import Nav from './nav';
+import Products from './Products'
+import UserForm from './UserForm'
+import CategoryForm from './CategoryForm'
+import Categorys from './Categorys'
+import axios from 'axios'
+import store from './store';
+import { Provider } from 'react-redux';
 
-
-
-export default class App extends React.Component{
-    constructor (props) {
-        super(props);
-        this.state = {
-          regProducts:[],
-          speProducts:[],
-          inputValue:''
-        };
-        this.submitChangeReg = this.submitChangeReg.bind(this);
-        this.submitChangeSpe = this.submitChangeSpe.bind(this);
-        this.handleChange = this.handleChange.bind(this);
-    }
-    componentDidMount () {
-        axios.get('/api/regProduct/')
-          .then(res => res.data)
-          .then(products => {
-            this.setState({ regProducts:products })
-          });
-
-          axios.get('/api/speProduct/')
-          .then(res => res.data)
-          .then(products => {
-            this.setState({ speProducts:products })
-          });
-    }
-
-    handleChange (evt) {
-        const value = evt.target.value;
-        this.setState({
-          inputValue: value
-        });
-        
-
-    }
-
-    submitChangeReg(evt){
-        evt.preventDefault();
-        console.log(this.state.inputValue)
-   
-        axios.post('/api/speProduct', {name:this.state.inputValue})
-        .then(res => res.data)
-        .then(result => {
-          console.log(result) // response json from the server!
-        })
-
-        window.location.reload();
-
-
-        this.setState({
-            inputValue: ''
-        })
-    }
-
-    submitChangeSpe(evt){
-        evt.preventDefault();
-        console.log(this.state.inputValue)
-   
-        axios.post('/api/regProduct', {name:this.state.inputValue})
-        .then(res => res.data)
-        .then(result => {
-          console.log(result) // response json from the server!
-        })
-
-        window.location.reload();
-
-
-        this.setState({
-            inputValue: ''
-        })
-    }
-
-    render(){
-
-        return(
+const App =()=>{
+    return(
+        <Provider store={ store }>
+        <Router>
         <div>
-        <Products Products={this.state.regProducts} submitChange={this.submitChangeReg} handleChange={this.handleChange}/>
-        <hr/>
-        <Products Products={this.state.speProducts} submitChange={this.submitChangeSpe} handleChange={this.handleChange}/>
+        <Categorys />
+        <Switch>
+            {/* <Route exact path='/products' component={ Products } /> */}
+            <Route exact path='/categorys/:id' render={({ match, history })=> <CategoryForm id={ match.params.id*1} history={ history }/> } />
+            <Route exact path='/users/:id' render={({ match, history })=> <UserForm id={ match.params.id*1} history={ history }/> } />
+        </Switch>
         </div>
-        )
-
-    }
+        </Router>
+        </Provider>
+    )
 }
+
+axios.get('/api/categorys')
+.then( result => result.data)
+.then( categorys => {
+  store.dispatch({
+    type: 'SET_CATEGORYS',
+    categorys
+  });
+});
+
+axios.get('/api/products')
+.then( result => result.data)
+.then( products => {
+  store.dispatch({
+    type: 'SET_PRODUCTS',
+    products
+  });
+});
+export default App;

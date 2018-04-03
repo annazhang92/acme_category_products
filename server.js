@@ -1,50 +1,88 @@
-const express =require ('express');
-const app =express();
-const path = require("path");
-const db=require('./db')
-const regProduct = db.regProduct;
-const speProduct=db.speProduct;
-const bodyParser = require("body-parser");
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }));
+const express = require('express');
+const app = express();
+const port = process.env.PORT || 3000;
+const Sequelize = require('sequelize');
+const conn = new Sequelize (process.env.DATABASE_URL || 'postgres://localhost/acme_category_products_db');
+const path = require('path');
+app.use(require('body-parser').json());
 
-const port =process.env.PORT || 3000;
+const Category =conn.define('category',{
+    name:{
+        type: Sequelize.STRING
+    }
+});
 
-db.sync()
-.then(()=>db.seed());
+const Product =conn.define('product',{
+    name:{
+        type: Sequelize.STRING
+    }
+});
 
-app.use(express.static(path.join(__dirname, ".")));
+Product.belongsTo(Category);
+Category.hasMany(Product);
 
-app.get('/api/regProduct',(req,res,next)=>{
-    regProduct.findAll()
-    .then(products=>res.send(products))
+conn.sync({force:true})
+.then(()=>Promise.all[
+    Category.create({name:Math.floor(Math.random()*100)+'-Category'}),
+    Category.create({name:Math.floor(Math.random()*100)+'-Category'}),
+    Category.create({name:Math.floor(Math.random()*100)+'-Category'}),
+    Product.create({name:Math.floor(Math.random()*100)+'-Product',categoryId:1}),
+    Product.create({name:Math.floor(Math.random()*100)+'-Product',categoryId:1}),
+    Product.create({name:Math.floor(Math.random()*100)+'-Product',categoryId:1}),
+    Product.create({name:Math.floor(Math.random()*100)+'-Product',categoryId:1}),
+    Product.create({name:Math.floor(Math.random()*100)+'-Product',categoryId:2}),
+    Product.create({name:Math.floor(Math.random()*100)+'-Product',categoryId:2}),
+    Product.create({name:Math.floor(Math.random()*100)+'-Product',categoryId:2}),
+    Product.create({name:Math.floor(Math.random()*100)+'-Product',categoryId:3})
+])
 
+app.use(express.static(path.join(__dirname, "."))); //was is das???
+
+app.listen(port,()=>{console.log(`listening on port ${port}`)})
+
+app.get('/api/categorys',(req,res,next)=>{
+    Category.findAll()
+    .then(categorys=>res.send(categorys))
 })
 
-app.get('/api/speProduct',(req,res,next)=>{
-    speProduct.findAll()
+app.get('/api/products',(req,res,next)=>{
+    Product.findAll()
     .then(products=>res.send(products))
-
 })
 
-app.post('/api/regProduct',(req,res,next)=>{
-    regProduct.create(req.body);
-    speProduct.findOne({ where: { name: req.body.name } })
-    .then(product => {
+
+app.post('/api/categorys',(req,res,next)=>{
+    Category.create({name:Math.floor(Math.random()*100)+'-Category'})
+    .then( category => res.send(category))
+})
+
+
+
+// app.put('/api/users/:id', (req, res, next)=> {
+//     User.findById(req.params.id)
+//       .then( user => {
+//         Object.assign(user, req.body)
+//         return user.save();
+//       })
+//       .then( user => res.send(user))
+//       .catch(next);
+//   });
+  
+  app.delete('/api/categorys/:id', (req, res, next)=> {
+    Category.findById(req.params.id)
+      .then( category => {
+        return category.destroy();
+      })
+      .then( () => res.sendStatus(204))
+      .catch(next);
+  });
+
+
+  app.delete('/api/products/:id', (req, res, next)=> {
+    Product.findById(req.params.id)
+      .then( product => {
         return product.destroy();
       })
-})
-
-app.post('/api/speProduct',(req,res,next)=>{
-    speProduct.create(req.body);
-    regProduct.findOne({ where: { name: req.body.name } })
-    .then(product => {
-        return product.destroy();
-      })
-})
-
-
-
-
-
-app.listen(port,()=>console.log(`listening on port ${port}`))
+      .then( () => res.sendStatus(204))
+      .catch(next);
+  });

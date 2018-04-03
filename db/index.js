@@ -1,14 +1,11 @@
 const Sequelize = require('sequelize')
-const conn = new Sequelize(process.env.DATABASE_URL|| 'postgres://localhost/acme_products_specials_react_db');
+const conn = new Sequelize(process.env.DATABASE_URL|| 'postgres://localhost/acme_users_redux_db');
 
 
-const regProduct=conn.define('regProduct',{
+const Users=conn.define('user',{
     name:{type:Sequelize.STRING},
 })
 
-const speProduct=conn.define('speProduct',{
-    name:{type:Sequelize.STRING},
-})
 
 
 const sync =()=>{
@@ -17,19 +14,16 @@ const sync =()=>{
 
 const seed =()=>{
     return Promise.all([
-    regProduct.create({name:'foo'}),
-    regProduct.create({name:'bar'}),
-    ]).
-    then(Promise.all([
-        speProduct.create({name:'bazz'}),
-        ]))
+    Users.create({name:'foo'}),
+    Users.create({name:'bar'}),
+    Users.create({name:'bazz'}),
+    ])
 
 }
 
 module.exports ={
     sync,
     seed,
-    regProduct,
-    speProduct
+    Users
 
 };
